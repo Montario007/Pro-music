@@ -114,4 +114,21 @@ async def queue(ctx, arg):
     queues[ctx.guild.id].append({"filename": song, "voice_client": ctx.guild.voice_client})
     await ctx.send(f"{arg} has been added to the queue")
 
+@client.command(pass_context=True)
+async def queueinfo(ctx):
+    if ctx.guild.id not in queues:
+        await ctx.send("The queue is empty")
+        return
+
+    queue = queues[ctx.guild.id]
+    if not queue:
+        await ctx.send("The queue is empty")
+        return
+
+    message = "Current Queue:\n"
+    for i, song in enumerate(queue):
+        message += f"{i+1}. {song['filename'].replace('.mp3', '')}\n"
+    await ctx.send(message)
+
+
 client.run("MTA4NDgyNTIwOTY5MDkxNDgzNg.GOTJqc.Dn76Sz7M41d2NIzsXTVrcxYLiXK87PEO2Epdfo")
