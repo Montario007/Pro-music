@@ -130,5 +130,21 @@ async def queueinfo(ctx):
         message += f"{i+1}. {song['filename'].replace('.mp3', '')}\n"
     await ctx.send(message)
 
+@client.command(pass_context=True)
+async def skip(ctx):
+    if ctx.voice_client is None:
+        await ctx.send("I am not in a voice channel")
+        return
+
+    queue = queues.get(ctx.guild.id)
+    if not queue:
+        await ctx.send("The queue is empty")
+        return
+
+    ctx.voice_client.stop()
+    await ctx.send("Skipped the current song")
+
+    # Start playing the next song in the queue, if there is one
+    await check_queue(ctx.guild.id)
 
 client.run("MTA4NDgyNTIwOTY5MDkxNDgzNg.GOTJqc.Dn76Sz7M41d2NIzsXTVrcxYLiXK87PEO2Epdfo")
