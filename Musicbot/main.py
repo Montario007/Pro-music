@@ -1,4 +1,3 @@
-
 import discord
 from discord.ext import commands
 from discord import FFmpegPCMAudio
@@ -13,6 +12,13 @@ intents.message_content = True
 client = commands.Bot(command_prefix="!", intents=intents)
 
 queues = {}  # Dictionary to store queued songs for each guild
+
+# Dictionary to store playlists
+playlists = {
+    "gaming": ["relax.mp3", "song.mp3", "chill music.mp3"],
+    "relax": ["relax1.mp3", "relax2.mp3", "relax3.mp3"],
+    "chill music": ["chill1.mp3", "chill2.mp3", "chill3.mp3"]
+}
 
 
 @client.event
@@ -43,11 +49,26 @@ async def check_queue(guild_id):
 
 @client.command()
 async def hello(ctx):
-    await ctx.send("Joined")
+    await ctx.send("HI")
 
 
 @client.command()
-async def i(ctx):
+async def playlistinfo(ctx):
+    await ctx.send("Choose between these playlists to play: gaming, rap, hype")
+
+@client.command()
+async def gaminginfo(ctx):
+    await ctx.send("playlist songs in [gaming]:(song,relax,chill music)")
+@client.command()
+async def hypeinfo(ctx):
+    await ctx.send("playlist songs in [hype]:(song1,song 2,song 3)")
+
+@client.command()
+async def rapinfo(ctx):
+    await ctx.send("playlist songs in [rap]:(song1,song2, song 3)")
+
+@client.command()
+async def bye(ctx):
     await ctx.send("See ya")
 
 
@@ -92,19 +113,30 @@ async def resume(ctx):
         await ctx.send("There is no song paused")
 
 
-@client.command(pass_context=True)
-async def stop(ctx):
-    voice_client = discord.utils.get(client.voice_clients, guild=ctx.guild)
-    voice_client.stop()
 
 
 @client.command(pass_context=True)
 async def play(ctx, arg):
     voice_client = ctx.guild.voice_client
-    song = arg + '.mp3'
-    source = FFmpegPCMAudio(song)
-    voice_client.play(source, after=lambda e: asyncio.run_coroutine_threadsafe(check_queue(ctx.guild.id), client.loop))
-    # The after parameter in voice_client.play() sets up a callback function to call check_queue()
+    if arg in playlists:
+        for song in playlists[arg]:
+            source = FFmpegPCMAudio(song)
+            if ctx.guild.id not in queues:
+                queues[ctx.guild.id] = []  # Initialize queue for the guild if it doesn't exist
+            queues[ctx.guild.id].append({"filename": song, "voice_client": voice_client})
+        await ctx.send(f"{arg} playlist has been added to the queue")
+        if not voice_client.is_playing() and not voice_client.is_paused():
+            await check_queue(ctx.guild.id)
+    else:
+        song = arg + '.mp3'
+        source = FFmpegPCMAudio(song)
+        if ctx.guild.id not in queues:
+            queues[ctx.guild.id] = []  # Initialize queue for the guild if it doesn't exist
+        queues[ctx.guild.id].append({"filename": song, "voice_client": voice_client})
+        await ctx.send(f"{arg} has been added to the queue")
+        if not voice_client.is_playing() and not voice_client.is_paused():
+            await check_queue(ctx.guild.id)
+
 
 @client.command(pass_context=True)
 async def queue(ctx, arg):
@@ -148,3 +180,4 @@ async def skip(ctx):
     await check_queue(ctx.guild.id)
 
 client.run("MTA4NDgyNTIwOTY5MDkxNDgzNg.GOTJqc.Dn76Sz7M41d2NIzsXTVrcxYLiXK87PEO2Epdfo")
+ 
